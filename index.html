@@ -19,7 +19,7 @@
             --border: #2d343f;
             --header-bg: rgba(11, 14, 20, 0.85);
             --gradient-bg: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0b0e14 100%);
-            --glass: rgba(255, 255, 255, 0.03);
+            --glass: rgba(255, 255, 255, 0.05);
             --modal-card: #1e2532;
         }
 
@@ -32,7 +32,7 @@
             --border: #e2e8f0;
             --header-bg: rgba(255, 255, 255, 0.85);
             --gradient-bg: radial-gradient(circle at 50% 0%, #e0e7ff 0%, #f1f5f9 100%);
-            --glass: rgba(0, 0, 0, 0.03);
+            --glass: rgba(0, 0, 0, 0.05);
             --modal-card: #ffffff;
         }
 
@@ -150,6 +150,7 @@
             display: flex; align-items: center; justify-content: center;
         }
 
+        /* MODAL PAYMENT OVERLAY */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
@@ -157,10 +158,15 @@
         }
 
         .qris-card { 
-            background: var(--modal-card); width: 100%; max-width: 360px; border-radius: 40px; 
+            background: var(--modal-card); width: 100%; max-width: 380px; border-radius: 30px; 
             padding: 35px; text-align: center; color: var(--text); border: 1px solid var(--border);
             animation: zoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        }
+
+        .price-tag-container {
+            background: rgba(0,0,0,0.05); padding: 15px; border-radius: 20px; margin: 20px 0;
+            border: 1px solid var(--border);
         }
 
         footer { margin-top: 40px; padding: 40px 20px; text-align: center; border-top: 1px solid var(--border); }
@@ -180,16 +186,20 @@
 <body>
 
     <div id="qrisModal" class="modal-overlay">
-        <div class="qris-card">
-            <div style="font-weight: 800; font-size: 24px;">Aktivasi Fitur <span style="color:var(--primary)">PRO</span></div>
-            <p style="color: var(--text-dim); font-size: 14px; margin-top: 8px;">Masa trial Anda telah berakhir.</p>
-            <div style="background: var(--input-bg); padding: 20px; border-radius: 24px; margin: 20px 0; border: 1px solid var(--border);">
-                <span style="font-size: 28px; font-weight: 800; color: var(--primary);">Rp 30.000</span>
-                <span style="font-size: 12px; color: var(--text-dim); display: block; margin-top: 4px;">Akses 30 Hari</span>
+        <div class="qris-card animate__animated animate__zoomIn">
+            <h2 style="font-weight:900; margin-top:0;">Buka Fitur <span style="color:var(--orange)">PRO</span></h2>
+            <p style="color: var(--text-dim); font-size: 14px;">Masa trial Anda telah berakhir.</p>
+            
+            <div class="price-tag-container">
+                <p style="font-size:0.7rem; font-weight:800; color:var(--text-dim); margin:0; letter-spacing:1px;">HANYA</p>
+                <h3 style="font-size:1.8rem; margin:5px 0; color:var(--text);">Rp 30.000 <small style="font-size:0.9rem; opacity:0.6;">/ 30 hr</small></h3>
             </div>
-            <img src="QRIS.jpg" alt="QRIS" style="width: 220px; border-radius: 20px; background: white; padding: 10px;">
-            <button onclick="sendWA()" style="background: #25D366; color: white; width: 100%; padding: 18px; border-radius: 20px; border: none; font-weight: 800; margin-top: 25px; cursor: pointer; box-shadow: 0 10px 20px rgba(37, 211, 102, 0.2);">Konfirmasi via WhatsApp</button>
-            <button onclick="closeModal()" style="background:none; border:none; color:var(--text-dim); margin-top:20px; cursor:pointer; font-weight: 600;">Nanti Saja</button>
+
+            <img src="QRIS.jpg" alt="QRIS" style="width: 100%; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); background:white; padding:10px;">
+            
+            <button onclick="sendWA()" style="background:#25d366; color:white; width:100%; padding:18px; border-radius:20px; border:none; font-weight:800; font-size:1rem; cursor:pointer; box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);">WhatsApp Konfirmasi</button>
+            
+            <p onclick="closeModal()" style="cursor:pointer; font-size:0.8rem; color:var(--text-dim); font-weight:700; margin-top:20px;">Nanti Saja</p>
         </div>
     </div>
 
@@ -274,19 +284,16 @@
         const iconSun = `<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>`;
         const WA_ADMIN = "6289636503978"; 
 
-        // 1. SISTEM DYNAMIC TOKEN (AUTO PER BULAN)
         const monthNames = ["jan", "feb", "mar", "apr", "mei", "jun", "jul", "agt", "sep", "okt", "nov", "des"];
         const currentMonthToken = monthNames[new Date().getMonth()];
         const PRO_TOKEN = "pf_7xR9z_" + currentMonthToken;
 
-        // 2. LOGIKA AKSES & TRIAL
         function checkAccess() {
             const status = localStorage.getItem('bakery_status');
             const expiry = localStorage.getItem('bakery_expiry');
             const now = new Date().getTime();
             const badge = document.getElementById('badgeStatus');
 
-            // Cek Jika PRO
             if (status === 'PRO' && expiry) {
                 const remaining = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
                 if (remaining > 0) {
@@ -300,7 +307,6 @@
                 }
             }
 
-            // Cek Trial 1 Hari (24 Jam)
             let trialStart = localStorage.getItem('bakery_trial_start');
             if (!trialStart) {
                 trialStart = now;
@@ -321,11 +327,9 @@
             return false;
         }
 
-        // 3. AKTIVASI VIA URL
         function handleActivation() {
             const params = new URLSearchParams(window.location.search);
             const code = params.get('status');
-
             if (code === PRO_TOKEN) {
                 const expiry = new Date().getTime() + (30 * 24 * 60 * 60 * 1000);
                 localStorage.setItem('bakery_status', 'PRO');
@@ -334,12 +338,11 @@
                 alert("✅ Aktivasi Berhasil! Fitur PRO aktif 30 hari.");
                 location.reload();
             } else if (code) {
-                alert("⚠️ Link Kadaluwarsa. Silahkan minta link terbaru ke Admin.");
+                alert("⚠️ Link Kadaluwarsa atau Salah.");
                 window.history.replaceState({}, document.title, "/");
             }
         }
 
-        // UI FUNCTIONS
         function openModal() { document.getElementById('qrisModal').style.display = 'flex'; }
         function closeModal() { document.getElementById('qrisModal').style.display = 'none'; }
         
@@ -358,7 +361,6 @@
             document.getElementById('themeIcon').innerHTML = target === 'dark' ? iconSun : iconMoon;
         }
 
-        // CALCULATION LOGIC
         function formatNumberInput(obj) {
             let v = obj.value.replace(/[^0-9]/g, '');
             obj.value = v === "" ? "" : parseInt(v).toLocaleString('id-ID');
