@@ -229,11 +229,11 @@
             <div class="grid-main" style="grid-template-columns: 1fr 1fr;">
                 <div>
                     <label id="yieldLabel">Hasil Jadi</label>
-                    <input type="text" id="yield" inputmode="numeric" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
+                    <input type="tel" id="yield" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
                 </div>
                 <div>
                     <label>Operasional</label>
-                    <input type="text" id="overhead" inputmode="numeric" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
+                    <input type="tel" id="overhead" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
                 </div>
             </div>
             <div style="margin-top: 25px;">
@@ -273,11 +273,11 @@
     </footer>
 
     <script>
-        // DATA ICONS
         const iconMoon = `<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>`;
         const iconSun = `<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>`;
 
-        // THEME LOGIC
+        const WA_ADMIN = "6289636503978"; 
+
         function initTheme() {
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -296,16 +296,13 @@
             document.getElementById('themeIcon').innerHTML = theme === 'dark' ? iconSun : iconMoon;
         }
 
-        // ORIGINAL BUSINESS LOGIC (UNTOUCHED)
-        const WA_ADMIN = "6289636503978"; 
-
         function formatNumberInput(obj) {
             let v = obj.value.replace(/[^0-9]/g, '');
-            obj.value = v === "" ? "0" : parseInt(v).toLocaleString('id-ID');
+            obj.value = v === "" ? "" : parseInt(v).toLocaleString('id-ID');
         }
 
         function clearZero(el) { if (el.value === "0") el.value = ""; }
-        function restoreZero(el) { if (el.value === "") el.value = "0"; }
+        function restoreZero(el) { if (el.value === "") el.value = "0"; calc(); }
         
         function getNum(s) { return parseFloat(s.toString().replace(/\./g, '')) || 0; }
         function toRp(n) { return "Rp " + Math.round(n).toLocaleString('id-ID'); }
@@ -317,13 +314,24 @@
                 localStorage.setItem('bakery_trial_start', new Date().getTime());
                 return true;
             }
-            if (new Date().getTime() - start > 86400000) { openModal(); return false; }
+            if (new Date().getTime() - start > 86400000) { 
+                openModal(); 
+                return false; 
+            }
             return true;
         }
 
         function openModal() { document.getElementById('qrisModal').style.display = 'flex'; }
         function closeModal() { document.getElementById('qrisModal').style.display = 'none'; }
-        function sendWA() { window.open(`https://wa.me/${WA_ADMIN}?text=Aktivasi%20PRO`); }
+        
+        function sendWA() { 
+            const pesan = encodeURIComponent(
+                "Halo Admin Bakery Master,\n\n" +
+                "Saya ingin melakukan Aktivasi Fitur PRO. Saya baru saja melakukan pembayaran via QRIS.\n\n" +
+                "Mohon konfirmasi aktivasinya. Terima kasih!"
+            );
+            window.open(`https://wa.me/${WA_ADMIN}?text=${pesan}`); 
+        }
 
         let currentCategory = 'roti';
         function switchType(type, btn) {
@@ -333,14 +341,16 @@
             
             const yieldInput = document.getElementById('yield');
             document.getElementById('yieldLabel').innerText = type === 'kering' ? "Hasil (Toples)" : (type === 'bolu' ? "Hasil (Loyang)" : "Hasil (Pcs)");
-            yieldInput.value = "0";
             
             if(type === 'kering') {
                 document.getElementById('kering-options').classList.remove('hidden');
                 yieldInput.disabled = true;
+                yieldInput.style.opacity = "0.7";
             } else {
                 document.getElementById('kering-options').classList.add('hidden');
                 yieldInput.disabled = false;
+                yieldInput.style.opacity = "1";
+                yieldInput.value = "0";
             }
             document.getElementById('bahan-container').innerHTML = "";
             addRow();
@@ -354,15 +364,15 @@
                 <div class="grid-main">
                     <div class="full-width">
                         <label>Nama Bahan</label>
-                        <input type="text" placeholder="Contoh: Tepung Terigu">
+                        <input type="text" placeholder="Contool: Tepung Terigu">
                     </div>
                     <div>
                         <label>Harga/Kg</label>
-                        <input type="text" class="p-input" inputmode="numeric" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
+                        <input type="tel" class="p-input" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
                     </div>
                     <div>
                         <label>Gram</label>
-                        <input type="text" class="q-input" inputmode="numeric" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
+                        <input type="tel" class="q-input" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
                     </div>
                     <button class="btn-del" onclick="this.closest('.bahan-item').remove(); calc();">✕</button>
                 </div>`;
@@ -371,6 +381,7 @@
 
         function calc() {
             if (!checkAccess()) return;
+            
             let totalBahan = 0, totalGram = 0;
             const p = document.querySelectorAll('.p-input'), q = document.querySelectorAll('.q-input');
             
@@ -379,12 +390,14 @@
                 totalGram += getNum(q[i].value);
             });
             
-            let yldValue = getNum(document.getElementById('yield').value);
+            let yldInput = document.getElementById('yield');
+            let yldValue = getNum(yldInput.value);
             
+            // Logika Otomatis untuk Kue Kering
             if (currentCategory === 'kering') {
-                let beratMatang = totalGram * 0.9; 
+                let beratMatang = totalGram * 0.9; // Estimasi penyusutan 10% saat panggang
                 yldValue = beratMatang / parseFloat(document.getElementById('toples-size').value) || 0;
-                document.getElementById('yield').value = yldValue > 0 ? yldValue.toFixed(1) : 0;
+                yldInput.value = yldValue > 0 ? yldValue.toFixed(1) : "0";
             }
             
             let safeYield = yldValue || 1;
