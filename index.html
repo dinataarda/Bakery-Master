@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bakery Master</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+    <style>
+        :root {
+            --bg: #0b0e14;
+            --card: #1c212c;
+            --input-bg: #11141b;
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --accent: #10b981;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d343f;
+            --orange: #f59e0b;
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            outline: none; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            margin: 0; background-color: var(--bg); color: var(--text);
+            font-family: 'Plus Jakarta Sans', sans-serif; padding-bottom: 50px;
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0b0e14 100%);
+            background-attachment: fixed;
+        }
+
+        header {
+            padding: 20px; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(11, 14, 20, 0.85); backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+        }
+
+        .container { padding: 16px; max-width: 500px; margin: auto; }
+
+        .tabs { 
+            display: flex; gap: 8px; margin-bottom: 25px; 
+            background: var(--card); border-radius: 20px; padding: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            padding: 14px; background: transparent; border: none; border-radius: 15px;
+            color: var(--text-dim); font-weight: 700; font-size: 13px; flex: 1; cursor: pointer;
+        }
+
+        .tab-btn.active { 
+            background: var(--primary); color: white; 
+            box-shadow: 0 10px 20px var(--primary-glow);
+            transform: translateY(-2px);
+        }
+
+        .section-label { 
+            font-size: 11px; font-weight: 800; color: var(--primary); 
+            text-transform: uppercase; letter-spacing: 2px; margin: 30px 0 15px 4px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        
+        .section-label::after { content: ""; height: 1px; flex: 1; background: var(--border); }
+
+        .card { 
+            background: var(--card); border-radius: 32px; padding: 24px; 
+            border: 1px solid var(--border); margin-bottom: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .bahan-item {
+            background: var(--card); border-radius: 24px; padding: 20px;
+            margin-bottom: 18px; border: 1px solid var(--border);
+            animation: fadeInRight 0.5s ease forwards;
+        }
+
+        .grid-main { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 48px; 
+            gap: 15px; 
+        }
+        .full-width { grid-column: span 3; margin-bottom: 5px; }
+
+        label { display: block; font-size: 10px; font-weight: 800; color: var(--text-dim); margin-bottom: 8px; margin-left: 4px; }
+
+        input, select {
+            width: 100%; background: var(--input-bg); border: 2px solid var(--border);
+            border-radius: 16px; padding: 16px; color: white; font-size: 15px; font-weight: 600;
+            appearance: none; -webkit-appearance: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+            background: #161a22;
+        }
+
+        input:disabled {
+            background: var(--glass);
+            border-style: dashed;
+            color: var(--accent);
+            opacity: 1;
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236366f1'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 15px center; background-size: 18px;
+        }
+
+        .btn-del { 
+            background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); 
+            height: 52px; width: 52px; border-radius: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            align-self: end;
+        }
+
+        .btn-add {
+            width: 100%; background: rgba(99, 102, 241, 0.08); border: 2px dashed var(--primary);
+            color: var(--primary); padding: 18px; border-radius: 24px; font-weight: 800; cursor: pointer;
+            margin-top: 10px; margin-bottom: 20px;
+        }
+
+        .result-box {
+            background: linear-gradient(-45deg, #10b981, #059669, #0ea5e9, #6366f1);
+            background-size: 400% 400%; animation: gradientMove 15s ease infinite;
+            border-radius: 35px; padding: 35px 24px; text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            margin-top: 10px;
+        }
+
+        @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        
+        .price-main { font-size: 42px; font-weight: 800; margin: 10px 0; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.92); backdrop-filter: blur(12px);
+            z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+
+        .qris-card { 
+            background: white; width: 100%; max-width: 360px; border-radius: 40px; 
+            padding: 35px; text-align: center; color: #1a1a1a;
+            animation: zoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-wa { background: #25D366; color: white; width: 100%; padding: 18px; border-radius: 20px; border: none; font-weight: 800; margin-top: 25px; cursor: pointer; }
+        
+        .stats-grid { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; 
+            padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2); 
+        }
+        .stat-val { font-size: 16px; font-weight: 800; }
+        .hidden { display: none; }
+
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        #badgeStatus { animation: pulse 2s infinite; cursor: pointer; }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="qrisModal" class="modal-overlay">
+        <div class="qris-card">
+            <div style="font-weight: 800; font-size: 24px;">Aktivasi Fitur <span style="color:var(--primary)">PRO</span></div>
+            <p style="color: #64748b; font-size: 14px; margin-top: 8px;">Masa trial Anda telah berakhir.</p>
+            <div style="background: #f8fafc; padding: 20px; border-radius: 24px; margin: 20px 0; border: 1px solid #e2e8f0;">
+                <span style="font-size: 28px; font-weight: 800; color: var(--primary);">Rp 30.000</span>
+                <span style="font-size: 12px; color: #64748b; display: block; margin-top: 4px;">Akses 30/Perbulan</span>
+            </div>
+            <img src="QRIS.jpg" alt="QRIS" style="width: 220px; border-radius: 20px;">
+            <button class="btn-wa" onclick="sendWA()">Konfirmasi via WhatsApp</button>
+            <button onclick="closeModal()" style="background:none; border:none; color:#94a3b8; margin-top:20px; cursor:pointer;">Nanti Saja</button>
+        </div>
+    </div>
+
+    <header class="animate__animated animate__fadeInDown">
+        <div style="font-weight: 800; font-size: 22px; letter-spacing: -0.5px;">🥐 Bakery<span style="color:var(--primary)">Master</span></div>
+        <button id="badgeStatus" onclick="openModal()" style="font-size: 11px; font-weight: 800; background: var(--orange); padding: 10px 16px; border: none; color: white; border-radius: 12px;">TRIAL MODE</button>
+    </header>
+
+    <div class="container">
+        <div class="section-label animate__animated animate__fadeIn" style="animation-delay: 0.1s;">Pilih Kategori</div>
+        <div class="tabs animate__animated animate__fadeIn" style="animation-delay: 0.2s;">
+            <button class="tab-btn active" onclick="switchType('roti', this)">Roti Manis</button>
+            <button class="tab-btn" onclick="switchType('bolu', this)">Bolu / Lapis</button>
+            <button class="tab-btn" onclick="switchType('kering', this)">Kue Kering</button>
+        </div>
+
+        <div class="section-label animate__animated animate__fadeIn" id="tableTitle" style="animation-delay: 0.3s;">Bahan Baku</div>
+        <div id="bahan-container"></div>
+        <button class="btn-add animate__animated animate__fadeInUp" onclick="addRow()">+ Tambah Item Baru</button>
+
+        <div class="section-label animate__animated animate__fadeIn" style="animation-delay: 0.4s;">Setelan Produksi</div>
+        <div class="card animate__animated animate__fadeInUp" style="animation-delay: 0.5s;">
+            <div id="kering-options" class="hidden">
+                <label>Ukuran Kemasan</label>
+                <select id="toples-size" style="margin-bottom: 20px;" onchange="calc()">
+                    <option value="500">Premium - Toples 500g</option>
+                    <option value="300">Medium - PET (Tabung) 300g</option>
+                    <option value="250">Ekonomis - Toples 250g</option>
+                </select>
+            </div>
+            <div class="grid-main" style="grid-template-columns: 1fr 1fr;">
+                <div>
+                    <label id="yieldLabel">Hasil Jadi</label>
+                    <input type="text" id="yield" inputmode="numeric" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
+                </div>
+                <div>
+                    <label>Operasional</label>
+                    <input type="text" id="overhead" inputmode="numeric" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
+                </div>
+            </div>
+            <div style="margin-top: 25px;">
+                <label>Target Keuntungan</label>
+                <select id="margin" onchange="calc()">
+                    <option value="0.5">Untung 50% (Ekonomis)</option>
+                    <option value="0.8">Untung 80% (Medium)</option>
+                    <option value="1.0" selected>Untung 100% (Rekomendasi)</option>
+                    <option value="1.5">Untung 150% (Premium)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="result-box animate__animated animate__fadeInUp">
+            <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; opacity: 0.9;">REKOMENDASI JUAL</div>
+            <div class="price-main" id="res-jual">Rp 0</div>
+            <div class="stats-grid">
+                <div>
+                    <div style="font-size:10px; font-weight: 800; opacity:0.8; margin-bottom: 4px;">MODAL / PCS</div>
+                    <div class="stat-val" id="res-hpp">Rp 0</div>
+                </div>
+                <div>
+                    <div style="font-size:10px; font-weight: 800; opacity:0.8; margin-bottom: 4px;">ESTIMASI LABA</div>
+                    <div class="stat-val" id="res-profit">Rp 0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WA_ADMIN = "6289636503978"; 
+
+        function formatNumberInput(obj) {
+            let v = obj.value.replace(/[^0-9]/g, '');
+            if (v === "") {
+                obj.value = "0";
+            } else {
+                obj.value = parseInt(v).toLocaleString('id-ID');
+            }
+        }
+
+        function clearZero(el) { if (el.value === "0") el.value = ""; }
+        function restoreZero(el) { if (el.value === "") el.value = "0"; }
+        
+        function getNum(s) { return parseFloat(s.toString().replace(/\./g, '')) || 0; }
+        function toRp(n) { return "Rp " + Math.round(n).toLocaleString('id-ID'); }
+
+        function checkAccess() {
+            if (localStorage.getItem('bakery_status') === 'PRO') return true;
+            let start = localStorage.getItem('bakery_trial_start');
+            if (!start) {
+                localStorage.setItem('bakery_trial_start', new Date().getTime());
+                return true;
+            }
+            if (new Date().getTime() - start > 86400000) { openModal(); return false; }
+            return true;
+        }
+
+        function openModal() { document.getElementById('qrisModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('qrisModal').style.display = 'none'; }
+        function sendWA() { window.open(`https://wa.me/${WA_ADMIN}?text=Aktivasi%20PRO`); }
+
+        let currentCategory = 'roti';
+        function switchType(type, btn) {
+            currentCategory = type;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const yieldInput = document.getElementById('yield');
+            document.getElementById('yieldLabel').innerText = type === 'kering' ? "Hasil (Toples)" : (type === 'bolu' ? "Hasil (Loyang)" : "Hasil (Pcs)");
+            
+            // RESET NILAI SAAT GANTI KATEGORI
+            yieldInput.value = "0";
+            
+            if(type === 'kering') {
+                document.getElementById('kering-options').classList.remove('hidden');
+                yieldInput.disabled = true;
+            } else {
+                document.getElementById('kering-options').classList.add('hidden');
+                yieldInput.disabled = false;
+            }
+            document.getElementById('bahan-container').innerHTML = "";
+            addRow();
+            calc();
+        }
+
+        function addRow() {
+            const div = document.createElement('div');
+            div.className = 'bahan-item';
+            div.innerHTML = `
+                <div class="grid-main">
+                    <div class="full-width">
+                        <label>Nama Bahan</label>
+                        <input type="text" placeholder="Contoh: Tepung Terigu">
+                    </div>
+                    <div>
+                        <label>Harga/Kg</label>
+                        <input type="text" class="p-input" inputmode="numeric" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
+                    </div>
+                    <div>
+                        <label>Gram</label>
+                        <input type="text" class="q-input" inputmode="numeric" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
+                    </div>
+                    <button class="btn-del" onclick="this.closest('.bahan-item').remove(); calc();">✕</button>
+                </div>`;
+            document.getElementById('bahan-container').appendChild(div);
+        }
+
+        function calc() {
+            if (!checkAccess()) return;
+            let totalBahan = 0, totalGram = 0;
+            const p = document.querySelectorAll('.p-input'), q = document.querySelectorAll('.q-input');
+            
+            p.forEach((el, i) => {
+                totalBahan += (getNum(el.value) / 1000) * getNum(q[i].value);
+                totalGram += getNum(q[i].value);
+            });
+            
+            let yld = getNum(document.getElementById('yield').value);
+            
+            if (currentCategory === 'kering') {
+                let beratMatang = totalGram * 0.9; 
+                yld = beratMatang / parseFloat(document.getElementById('toples-size').value) || 0;
+                document.getElementById('yield').value = yld > 0 ? yld.toFixed(1) : 0;
+            }
+            
+            // JIKA YIELD MASIH 0, BERIKAN NILAI 1 AGAR TIDAK ERROR (DIVIDE BY ZERO)
+            let safeYield = yld || 1;
+            
+            const hpp = (totalBahan + getNum(document.getElementById('overhead').value)) / safeYield;
+            const jual = hpp * (parseFloat(document.getElementById('margin').value) + 1);
+            
+            // JIKA TIDAK ADA BAHAN, TAMPILKAN 0
+            if (totalBahan === 0) {
+                document.getElementById('res-jual').innerText = "Rp 0";
+                document.getElementById('res-hpp').innerText = "Rp 0";
+                document.getElementById('res-profit').innerText = "Rp 0";
+            } else {
+                document.getElementById('res-jual').innerText = toRp(jual);
+                document.getElementById('res-hpp').innerText = toRp(hpp);
+                document.getElementById('res-profit').innerText = toRp(jual - hpp);
+            }
+        }
+
+        window.onload = () => switchType('roti', document.querySelector('.tab-btn'));
+    </script>
+</body>
+</html>
