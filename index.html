@@ -118,7 +118,7 @@
             box-shadow: 0 0 0 4px var(--primary-glow);
         }
 
-        input:disabled { background: var(--glass); border-style: dashed; color: var(--accent); opacity: 1; }
+        input:disabled { background: var(--glass); border-style: dashed; color: var(--accent); opacity: 0.7; }
 
         .btn-del { 
             background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); 
@@ -197,10 +197,9 @@
         <div style="font-weight: 800; font-size: 20px; letter-spacing: -0.5px;">🥐 Bakery<span style="color:var(--primary)">Master</span></div>
         <div style="display: flex; gap: 10px; align-items: center;">
             <button onclick="toggleTheme()" class="theme-toggle">
-                <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 20px; height: 20px;">
-                </svg>
+                <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 20px; height: 20px;"></svg>
             </button>
-            <button id="badgeStatus" onclick="openModal()" style="font-size: 11px; font-weight: 800; background: var(--orange); padding: 10px 16px; border: none; color: white; border-radius: 12px;">TRIAL MODE</button>
+            <button id="badgeStatus" onclick="openModal()" style="font-size: 11px; font-weight: 800; background: var(--orange); padding: 10px 16px; border: none; color: white; border-radius: 12px;">LOADING...</button>
         </div>
     </header>
 
@@ -267,21 +266,88 @@
         <div style="font-size: 13px; font-weight: 700; color: var(--text); opacity: 0.9;">
             © 2026 Bakery Master by <span style="color: var(--primary);">ArdaDinata</span>.
         </div>
-        <div class="footer-tagline">
-            Didesain untuk UMKM & Professional Seller.
-        </div>
+        <div class="footer-tagline">Didesain untuk UMKM & Professional Seller.</div>
     </footer>
 
     <script>
         const iconMoon = `<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>`;
         const iconSun = `<path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>`;
-
         const WA_ADMIN = "6289636503978"; 
 
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeIcon(savedTheme);
+        // 1. SISTEM DYNAMIC TOKEN (AUTO PER BULAN)
+        const monthNames = ["jan", "feb", "mar", "apr", "mei", "jun", "jul", "agt", "sep", "okt", "nov", "des"];
+        const currentMonthToken = monthNames[new Date().getMonth()];
+        const PRO_TOKEN = "pf_7xR9z_" + currentMonthToken;
+
+        // 2. LOGIKA AKSES & TRIAL
+        function checkAccess() {
+            const status = localStorage.getItem('bakery_status');
+            const expiry = localStorage.getItem('bakery_expiry');
+            const now = new Date().getTime();
+            const badge = document.getElementById('badgeStatus');
+
+            // Cek Jika PRO
+            if (status === 'PRO' && expiry) {
+                const remaining = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+                if (remaining > 0) {
+                    badge.innerText = `PRO: ${remaining} HARI LAGI`;
+                    badge.style.background = "var(--accent)";
+                    badge.onclick = null;
+                    return true;
+                } else {
+                    localStorage.removeItem('bakery_status');
+                    localStorage.removeItem('bakery_expiry');
+                }
+            }
+
+            // Cek Trial 1 Hari (24 Jam)
+            let trialStart = localStorage.getItem('bakery_trial_start');
+            if (!trialStart) {
+                trialStart = now;
+                localStorage.setItem('bakery_trial_start', trialStart);
+            }
+
+            const oneDay = 24 * 60 * 60 * 1000;
+            if (now - trialStart <= oneDay) {
+                const sisaJam = Math.ceil((oneDay - (now - trialStart)) / (1000 * 60 * 60));
+                badge.innerText = `TRIAL: ${sisaJam} JAM LAGI`;
+                badge.style.background = "var(--orange)";
+                return true;
+            }
+
+            badge.innerText = "TRIAL HABIS";
+            badge.style.background = "#ef4444";
+            openModal();
+            return false;
+        }
+
+        // 3. AKTIVASI VIA URL
+        function handleActivation() {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('status');
+
+            if (code === PRO_TOKEN) {
+                const expiry = new Date().getTime() + (30 * 24 * 60 * 60 * 1000);
+                localStorage.setItem('bakery_status', 'PRO');
+                localStorage.setItem('bakery_expiry', expiry);
+                window.history.replaceState({}, document.title, "/");
+                alert("✅ Aktivasi Berhasil! Fitur PRO aktif 30 hari.");
+                location.reload();
+            } else if (code) {
+                alert("⚠️ Link Kadaluwarsa. Silahkan minta link terbaru ke Admin.");
+                window.history.replaceState({}, document.title, "/");
+            }
+        }
+
+        // UI FUNCTIONS
+        function openModal() { document.getElementById('qrisModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('qrisModal').style.display = 'none'; }
+        
+        function sendWA() { 
+            const pesan = encodeURIComponent(
+                `Halo Admin Bakery Master,\n\nSaya ingin aktivasi PRO bulan ${currentMonthToken.toUpperCase()}.\nMohon kirimkan link aktivasinya.`
+            );
+            window.open(`https://wa.me/${WA_ADMIN}?text=${pesan}`); 
         }
 
         function toggleTheme() {
@@ -289,13 +355,10 @@
             const target = current === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', target);
             localStorage.setItem('theme', target);
-            updateThemeIcon(target);
+            document.getElementById('themeIcon').innerHTML = target === 'dark' ? iconSun : iconMoon;
         }
 
-        function updateThemeIcon(theme) {
-            document.getElementById('themeIcon').innerHTML = theme === 'dark' ? iconSun : iconMoon;
-        }
-
+        // CALCULATION LOGIC
         function formatNumberInput(obj) {
             let v = obj.value.replace(/[^0-9]/g, '');
             obj.value = v === "" ? "" : parseInt(v).toLocaleString('id-ID');
@@ -303,53 +366,23 @@
 
         function clearZero(el) { if (el.value === "0") el.value = ""; }
         function restoreZero(el) { if (el.value === "") el.value = "0"; calc(); }
-        
         function getNum(s) { return parseFloat(s.toString().replace(/\./g, '')) || 0; }
         function toRp(n) { return "Rp " + Math.round(n).toLocaleString('id-ID'); }
-
-        function checkAccess() {
-            if (localStorage.getItem('bakery_status') === 'PRO') return true;
-            let start = localStorage.getItem('bakery_trial_start');
-            if (!start) {
-                localStorage.setItem('bakery_trial_start', new Date().getTime());
-                return true;
-            }
-            if (new Date().getTime() - start > 86400000) { 
-                openModal(); 
-                return false; 
-            }
-            return true;
-        }
-
-        function openModal() { document.getElementById('qrisModal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('qrisModal').style.display = 'none'; }
-        
-        function sendWA() { 
-            const pesan = encodeURIComponent(
-                "Halo Admin Bakery Master,\n\n" +
-                "Saya ingin melakukan Aktivasi Fitur PRO. Saya baru saja melakukan pembayaran via QRIS.\n\n" +
-                "Mohon konfirmasi aktivasinya. Terima kasih!"
-            );
-            window.open(`https://wa.me/${WA_ADMIN}?text=${pesan}`); 
-        }
 
         let currentCategory = 'roti';
         function switchType(type, btn) {
             currentCategory = type;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
             const yieldInput = document.getElementById('yield');
             document.getElementById('yieldLabel').innerText = type === 'kering' ? "Hasil (Toples)" : (type === 'bolu' ? "Hasil (Loyang)" : "Hasil (Pcs)");
             
             if(type === 'kering') {
                 document.getElementById('kering-options').classList.remove('hidden');
                 yieldInput.disabled = true;
-                yieldInput.style.opacity = "0.7";
             } else {
                 document.getElementById('kering-options').classList.add('hidden');
                 yieldInput.disabled = false;
-                yieldInput.style.opacity = "1";
                 yieldInput.value = "0";
             }
             document.getElementById('bahan-container').innerHTML = "";
@@ -362,18 +395,9 @@
             div.className = 'bahan-item';
             div.innerHTML = `
                 <div class="grid-main">
-                    <div class="full-width">
-                        <label>Nama Bahan</label>
-                        <input type="text" placeholder="Contool: Tepung Terigu">
-                    </div>
-                    <div>
-                        <label>Harga/Kg</label>
-                        <input type="tel" class="p-input" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
-                    </div>
-                    <div>
-                        <label>Gram</label>
-                        <input type="tel" class="q-input" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();">
-                    </div>
+                    <div class="full-width"><label>Nama Bahan</label><input type="text" placeholder="Contoh: Tepung"></div>
+                    <div><label>Harga/Kg</label><input type="tel" class="p-input" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();"></div>
+                    <div><label>Gram</label><input type="tel" class="q-input" value="0" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="formatNumberInput(this); calc();"></div>
                     <button class="btn-del" onclick="this.closest('.bahan-item').remove(); calc();">✕</button>
                 </div>`;
             document.getElementById('bahan-container').appendChild(div);
@@ -381,43 +405,30 @@
 
         function calc() {
             if (!checkAccess()) return;
-            
             let totalBahan = 0, totalGram = 0;
             const p = document.querySelectorAll('.p-input'), q = document.querySelectorAll('.q-input');
-            
             p.forEach((el, i) => {
                 totalBahan += (getNum(el.value) / 1000) * getNum(q[i].value);
                 totalGram += getNum(q[i].value);
             });
-            
             let yldInput = document.getElementById('yield');
             let yldValue = getNum(yldInput.value);
-            
-            // Logika Otomatis untuk Kue Kering
             if (currentCategory === 'kering') {
-                let beratMatang = totalGram * 0.9; // Estimasi penyusutan 10% saat panggang
-                yldValue = beratMatang / parseFloat(document.getElementById('toples-size').value) || 0;
+                yldValue = (totalGram * 0.9) / parseFloat(document.getElementById('toples-size').value) || 0;
                 yldInput.value = yldValue > 0 ? yldValue.toFixed(1) : "0";
             }
-            
-            let safeYield = yldValue || 1;
-            const hpp = (totalBahan + getNum(document.getElementById('overhead').value)) / safeYield;
-            const margin = parseFloat(document.getElementById('margin').value);
-            const jual = hpp * (margin + 1);
-            
-            if (totalBahan === 0) {
-                document.getElementById('res-jual').innerText = "Rp 0";
-                document.getElementById('res-hpp').innerText = "Rp 0";
-                document.getElementById('res-profit').innerText = "Rp 0";
-            } else {
-                document.getElementById('res-jual').innerText = toRp(jual);
-                document.getElementById('res-hpp').innerText = toRp(hpp);
-                document.getElementById('res-profit').innerText = toRp(jual - hpp);
-            }
+            const hpp = (totalBahan + getNum(document.getElementById('overhead').value)) / (yldValue || 1);
+            const jual = hpp * (parseFloat(document.getElementById('margin').value) + 1);
+            document.getElementById('res-jual').innerText = totalBahan ? toRp(jual) : "Rp 0";
+            document.getElementById('res-hpp').innerText = totalBahan ? toRp(hpp) : "Rp 0";
+            document.getElementById('res-profit').innerText = totalBahan ? toRp(jual - hpp) : "Rp 0";
         }
 
         window.onload = () => {
-            initTheme();
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').innerHTML = savedTheme === 'dark' ? iconSun : iconMoon;
+            handleActivation();
             switchType('roti', document.querySelector('.tab-btn'));
         };
     </script>
